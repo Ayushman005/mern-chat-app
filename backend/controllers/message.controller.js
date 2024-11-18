@@ -1,5 +1,6 @@
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
+import { getReceiverSocketId } from "../socket/socket.js";
 
 export const sendMessage = async (req,res)=>{
     try {
@@ -29,6 +30,11 @@ export const sendMessage = async (req,res)=>{
 
         // line below will do the optimization and save in parallel in of one by one as code written above.
         await Promise.all([conversation.save(), newMessage.save()])
+
+        const recieverSocketId = getReceiverSocketId(recieverId);
+        if(recieverSocketId){
+            io.to(recieverSocketId).emit("newMessage", newMessage)
+        }
 
 
         res.status(201).json(newMessage);
